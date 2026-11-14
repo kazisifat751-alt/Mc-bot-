@@ -29,7 +29,6 @@ GAMEMODES = [
 ]
 REGIONS = ["NA", "EU", "AS", "SA", "OCE"]
 
-# Tier Point Weights for Leaderboard calculations
 TIER_POINTS = {
     "HT1": 100,
     "LT1": 80,
@@ -201,9 +200,8 @@ class MCTiersBot(commands.Bot):
 
 bot = MCTiersBot()
 
+
 # ==================== PERMISSIONS & HELPERS ====================
-
-
 def is_staff_or_tester(interaction: discord.Interaction) -> bool:
   if interaction.user.guild_permissions.administrator:
     return True
@@ -243,8 +241,6 @@ def is_tester_only(interaction: discord.Interaction) -> bool:
 
 
 # ==================== MODALS & VIEWS ====================
-
-
 class VerificationModal(discord.ui.Modal, title="Minecraft PvP Verification"):
   ign = discord.ui.TextInput(
       label="Minecraft IGN",
@@ -507,8 +503,6 @@ class CloseTicketView(discord.ui.View):
 
 
 # ==================== DISCORD SLASH COMMANDS ====================
-
-
 @bot.tree.command(
     name="setup_panel", description="Sends the verification portal panel."
 )
@@ -709,4 +703,5 @@ async def result(
 
   if not role:
     try:
-      role = 
+      role = await interaction.guild.create_role(
+          name=rol
