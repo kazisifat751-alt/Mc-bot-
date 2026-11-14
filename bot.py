@@ -704,4 +704,6 @@ async def result(
   if not role:
     try:
       role = await interaction.guild.create_role(
-          name=rol
+    name=role_name, reason="Automated MCTiers Role Creation"
+)
+
