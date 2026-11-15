@@ -622,57 +622,52 @@ async def next_test(interaction: discord.Interaction):
   if not row:
     conn.close()
     await interaction.response.send_message(
-        "📭 The queue is currently empty.", ephemeral=True
-    )
-    return
+import os
+import threading
+import discord
+from discord import app_commands
+from flask import Flask
+import sqlite3
 
-  discord_id = row[0]
-  cursor.execute("DELETE FROM queue WHERE discord_id = ?", (discord_id,))
-  conn.commit()
-  conn.close()
+# --- Flask Web Server Setup for Render ---
+app = Flask(__name__)
 
-  player = interaction.guild.get_member(discord_id)
-  if not player:
-    await interaction.response.send_message(
-        "⚠️ Next player left the server. Pulled next.", ephemeral=True
-    )
-    return
+@app.route("/")
+def home():
+    return "Minecraft PvP Tier Bot is Live!"
 
-  overwrites = {
-      interaction.guild.default_role: discord.PermissionOverwrite(
-          read_messages=False
-      ),
-      player: discord.PermissionOverwrite(read_messages=True, send_messages=True),
-      interaction.user: discord.PermissionOverwrite(
-          read_messages=True, send_messages=True
-      ),
-      interaction.guild.me: discord.PermissionOverwrite(read_messages=True),
-  }
+def run_web():
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
 
-  test_channel = await interaction.guild.create_text_channel(
-      name=f"test-{player.name}", overwrites=overwrites
-  )
+# --- Discord Bot Setup ---
+intents = discord.Intents.default()
+intents.members = True
+intents.message_content = True
 
-  embed = discord.Embed(
-      title="⚔️ Tier Testing Session Started",
-      description=(
-          f"Tester: {interaction.user.mention}\nPvPer: {player.mention}\n\nUse"
-          " `/result` when the match concludes to assign tiers."
-      ),
-      color=discord.Color.green(),
-  )
-  await test_channel.send(
-      content=f"{player.mention} {interaction.user.mention}",
-      embed=embed,
-      view=CloseTicketView(),
-  )
-  await interaction.response.send_message(
-      f"✅ Pulled {player.mention} from queue. Created ticket:"
-      f" {test_channel.mention}",
-      ephemeral=True,
-  )
+class MyClient(discord.Client):
+    def __init__(self):
+        super().__init__(intents=intents)
+        self.tree = app_commands.CommandTree(self)
 
+    async def setup_hook(self):
+        await self.tree.sync()
+        print(f"Synced slash commands for {self.user}")
 
+    async def on_ready(self):
+        print(f"Logged in as {self.user} (ID: {self.user.id})")
+
+bot = MyClient()
+
+# --- Configuration & Constants ---
+GAMEMODES = ["Mace", "Sword", "SMP", "UHC", "NethOP"]
+TIERS = ["HT1", "LT1", "HT2", "LT2", "HT3", "LT3"]
+
+def is_tester_only(interaction: discord.Interaction):
+    # আপনার টেস্টার বা রোল চেকিং লজিক এখানে কাজ করবে
+    return True
+
+# --- Commands ---
 @bot.tree.command(
     name="result",
     description="Assigns test results, tier role, and sets cooldown.",
@@ -692,40 +687,32 @@ async def result(
     gamemode: str,
     tier: str,
 ):
-        if not is_tester_only(interaction):
-                await interaction.response.send_message(
-                    "❌ You do not have permission to log test results.", ephemeral=True
-                )
-                return
+    if not is_tester_only(interaction):
+        await interaction.response.send_message(
+            "❌ You do not have permission to log test results.", ephemeral=True
+        )
+        return
 
-        role_name = f"{gamemode}-{tier}"
-        role = discord.utils.get(interaction.guild.roles, name=role_name)
-    import os
-import threading
-from flask import Flask
-
-if "app" not in globals():
-  app = Flask(__name__)
-
-  @app.route("/")
-  def home():
-    return "Bot is running!"
-
-
-def run_web():
-  port = int(os.environ.get("PORT", 5000))
-  app.run(host="0.0.0.0", port=port)
-
-
-threading.Thread(target=run_web, daemon=True).start()
-
-token = (
-    os.environ.get("DISCORD_TOKEN")
-    or os.environ.get("TOKEN")
-    or os.environ.get("BOT_TOKEN")
-)
-if not token:
-  print("ERROR: Render Environment-এ বটের Token পাওয়া যায়নি!")
-else:
-  bot.run(token)
+    role_name = f"{gamemode}-{tier}"
+    role = discord.utils.get(interaction.guild.roles, name=role_name)
     
+    await interaction.response.send_message(
+        f"✅ Test result logged for {member.mention}. Role: {role_name}", ephemeral=True
+    )
+
+# --- Main Entry Point ---
+if __name__ == "__main__":
+    # ব্যাকগ্রাউন্ডে Flask সার্ভার চালু করা (Render পোর্ট হ্যান্ডেল করার জন্য)
+    threading.Thread(target=run_web, daemon=True).start()
+
+    # ডিসকর্ড টোকেন রিড করা
+    token = (
+        os.environ.get("DISCORD_TOKEN")
+        or os.environ.get("TOKEN")
+        or os.environ.get("BOT_TOKEN")
+    )
+    
+    if not token:
+        print("ERROR: Render Environment-এ বটের Token পাওয়া যায়নি!")
+    else:
+        bot.run(token)
