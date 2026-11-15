@@ -694,16 +694,4 @@ async def result(
 ):
   if not is_tester_only(interaction):
     await interaction.response.send_message(
-        "❌ You do not have permission to log test results.", ephemeral=True
-    )
-    return
-
-  role_name = f"{gamemode}-{tier}"
-  role = discord.utils.get(interaction.guild.roles, name=role_name)
-
-  if not role:
-    try:
-      role = await interaction.guild.create_role(
-    name=role_name, reason="Automated MCTiers Role Creation"
-)
-
+        "❌ You
