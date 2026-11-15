@@ -700,3 +700,32 @@ async def result(
 
         role_name = f"{gamemode}-{tier}"
         role = discord.utils.get(interaction.guild.roles, name=role_name)
+    import os
+import threading
+from flask import Flask
+
+if "app" not in globals():
+  app = Flask(__name__)
+
+  @app.route("/")
+  def home():
+    return "Bot is running!"
+
+
+def run_web():
+  port = int(os.environ.get("PORT", 5000))
+  app.run(host="0.0.0.0", port=port)
+
+
+threading.Thread(target=run_web, daemon=True).start()
+
+token = (
+    os.environ.get("DISCORD_TOKEN")
+    or os.environ.get("TOKEN")
+    or os.environ.get("BOT_TOKEN")
+)
+if not token:
+  print("ERROR: Render Environment-এ বটের Token পাওয়া যায়নি!")
+else:
+  bot.run(token)
+    
