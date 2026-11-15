@@ -693,5 +693,5 @@ async def result(
     tier: str,
 ):
   if not is_tester_only(interaction):
-    await interaction.response.send_message(
-        "❌ You
+    await interaction.response.send_message("❌ You do not have permission to log test results.", ephemeral=True)
+      
