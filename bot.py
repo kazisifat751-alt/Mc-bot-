@@ -692,13 +692,11 @@ async def result(
     gamemode: str,
     tier: str,
 ):
-    if not is_tester_only(interaction):
-    await interaction.response.send_message(
-        "❌ You do not have permission to log test results.", ephemeral=True
-    )
-    return
+        if not is_tester_only(interaction):
+                await interaction.response.send_message(
+                    "❌ You do not have permission to log test results.", ephemeral=True
+                )
+                return
 
-  role_name = f"{gamemode}-{tier}"
-  role = discord.utils.get(interaction.guild.roles, name=role_name)
-
-      return
+        role_name = f"{gamemode}-{tier}"
+        role = discord.utils.get(interaction.guild.roles, name=role_name)
